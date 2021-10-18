@@ -116,7 +116,7 @@ if ~isvalid(roiwindow)
 return
 end
 
-%% Store in memory the drawn pattern 
+%%
 
 % targetPattern = double(imresize(mask,[min(SLM_size_px) min(SLM_size_px)]));
 % ITarget = targetPattern;
@@ -207,7 +207,7 @@ ee = sqrt( immse( Iachieved(:)./max(Iachieved(:)), ITarget(:)./max(ITarget(:)) )
 ee1 = std(Iachieved(:)./max(Iachieved(:))-ITarget(:)./max(ITarget(:)));
 error = [error; ee];
 error1 = [error1; ee1];
-uniformity = [uniformity; 1-((max(Iachieved(maschera))-min(Iachieved(maschera)))/(max(Iachieved(maschera))+min(Iachieved(maschera))))];
+uniformity = [uniformity; 1-((max(Iachieved(maschera))-min(Iachieved(mas)))/(max(Iachieved(mask))+min(Iachieved(mask))))];
 efficiency = [efficiency; sum(Iachieved(maschera))/sum(Iachieved(:))];
 
 numIter = numIter+1;
@@ -260,4 +260,4 @@ phase = mod (phase+flatPhase, 2*pi)./(2*pi);
 if SLM_attached
     slm.sendMap(phase);
 end
-figure;imshow(phase, []);
+% imshow(phase, []);
