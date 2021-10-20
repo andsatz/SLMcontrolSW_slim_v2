@@ -11,7 +11,10 @@ if SLM_attached
     slm = SLM_Hamamatsu(SLMControlGUI_parameters);
 end
 
-SLM_size_px = [600 600];
+if size(SLM_size_px,1)~=size(SLM_size_px,2)
+    blackBand = zeros(min(SLM_size_px), (max(SLM_size_px)-min(SLM_size_px))/2);
+    SLM_size_px = [min(SLM_size_px) min(SLM_size_px)];
+end
 
 %% Button: Flat Phase. Calibration for 0th order defocusing
 % Calibration with Vale's SW
@@ -26,7 +29,7 @@ inputCalibrationSlider = 6.3;
 
 
 flatPhase = lensPhaseModulation(SLM_size_px, inputCalibrationSlider, lambda_um, focalDist_um);
-flatPhase = [zeros(600, 100), flatPhase, zeros(600, 100)];
+flatPhase = [blackBand, flatPhase, blackBand];
 
 flatPhase_toBeSent = mod (flatPhase, 2*pi)./(2*pi);
 imshow(flatPhase,[]);
@@ -67,7 +70,7 @@ targetPattern = [blackBand, targetPattern, blackBand];
 ITarget = targetPattern;
 
 
-%% Draw target pattern on an image
+%% Load Image and draw target pattern on an image
 
 select_image = 1;
 

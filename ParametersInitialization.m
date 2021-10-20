@@ -3,15 +3,10 @@
 SLM_size_px = [800,600]; %[horizontal,vertical]
 lambda_um = 0.92;
 focalDist_um = 12.5e3;
-
-% SLMsize_px = [512,512];
 refractiveIndex = 1.33;
 objNA = 0.8;
-xyzp = [0,0,0;0,2,0;2,1,0];
-weight = [1,1,1];
 illuminationWavelength = 920e-9;
-algo_type = 'G';
-abl = 0;
+
 
 %%Parameters checks
 SLMControlGUI_parameters = struct(...
