@@ -72,7 +72,7 @@ ITarget = targetPattern;
 
 %% Load Image and draw target pattern on an image
 
-select_image = 1;
+select_image = 0;
 
 if select_image
 
@@ -123,7 +123,7 @@ end
 
 % targetPattern = double(imresize(mask,[min(SLM_size_px) min(SLM_size_px)]));
 % ITarget = targetPattern;
-[mask, labels, n] = roiwindow.getROIData;
+[mask, labels, n, shapes] = roiwindow.getROIData;
 
 figure;imshow(mask,[]);
 [tform, Itransformed] = applyGeometricalTransformation3D(zoomXY,1,rotation,0,mirroring,mask,1,1);

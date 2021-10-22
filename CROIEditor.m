@@ -71,6 +71,9 @@ classdef CROIEditor < handle
           imag    % image to work on
           roifig  % roi image 
           tl      % userinfo bar
+          edt
+          edt_label
+          relative_Intensities
         
         figw      % initial window height, this is calculated on load
         hwar = 2.1;  % aspect ratio
@@ -138,11 +141,12 @@ classdef CROIEditor < handle
             this.resizeWindow;
         end
 
-        function [roi, labels, number] = getROIData(this,varargin)
+        function [roi, labels, number, shapes] = getROIData(this,varargin)
         % retrieve ROI Data
             roi = this.roi;
             labels = this.labels;
             number = this.number;
+            shapes = this.shapes;
         end        
     end
     
@@ -162,16 +166,23 @@ classdef CROIEditor < handle
         
         function updateROI(this, a)  
             set(this.tl,'String','ROI not saved/applied','Visible','on','BackgroundColor',[255 182 193]./256);
-            this.mask = this.loadmask | zeros(size(this.image)) ;
+            this.mask = this.loadmask | zeros(size(this.image));
             for i=1:numel(this.shapes)
-               BWadd = this.shapes{i}.createMask(this.imag);
-               this.mask = this.mask | BWadd;
+%                BWadd = this.shapes{i}.createMask(this.imag);
+%                this.mask = this.mask | BWadd;
+               BWadd = this.shapes{i}.createMask(this.imag).*this.relative_Intensities(i);
+               this.mask = this.mask + BWadd;
             end
             set(this.roifig,'CData',this.image.*this.mask);
         end
 
         function newShapeCreated(this)
             set(this.shapes{end},'Tag',sprintf('imsel_%.f',numel(this.shapes)));
+            if isempty (this.relative_Intensities)
+                this.relative_Intensities(1) = str2num(get(this.edt,'String'));
+            else
+                this.relative_Intensities(end+1) = str2num(get(this.edt,'String'));
+            end
             this.shapes{end}.addNewPositionCallback(@this.updateROI);
             this.updateROI;
         end
@@ -233,6 +244,7 @@ classdef CROIEditor < handle
                     set(this.shapes{i},'Tag',['imsel_', num2str(i-1)]);
                 end
                 this.shapes(this.current)=[];
+                this.relative_Intensities(this.current)=[];
                 this.current = numel(this.shapes); 
                 this.updateROI;
             else
@@ -242,7 +254,7 @@ classdef CROIEditor < handle
         
         function applyclick(this, h, e, varargin)
             set(this.tl,'String','ROI applied','Visible','on','BackgroundColor','g');
-            this.roi = this.mask;
+            this.roi = min(this.mask,1);
             [this.labels, this.number] = bwlabel(this.mask); 
             
             if~(nargin > 3 && strcmp(varargin{1},'nopreview'))
@@ -303,9 +315,11 @@ classdef CROIEditor < handle
             % remove all the this.shapes
             for i=1:numel(this.shapes)
                 delete(this.shapes{i});
+                delete(this.relative_Intensities(i));
             end
             this.current = 1; % defines the currently selected shape - start with 1
             this.shapes = {}; % reset shape holder
+            this.relative_Intensities = [];
             this.updateROI;
         end
     
@@ -321,38 +335,50 @@ classdef CROIEditor < handle
             buttons = [];
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Point',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.8 0.15 0.10], ...
+                                       'Position',[0.01 0.75 0.15 0.10], ...
                                        'Callback',@(h,e)this.pointclick(h,e));
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Polygon',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.7 0.15 0.10], ...
+                                       'Position',[0.01 0.65 0.15 0.10], ...
                                        'Callback',@(h,e)this.polyclick(h,e));
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Ellipse',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.6 0.15 0.10],...
+                                       'Position',[0.01 0.55 0.15 0.10],...
                                        'Callback',@(h,e)this.elliclick(h,e));
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Freehand',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.5 0.15 0.10],...
+                                       'Position',[0.01 0.45 0.15 0.10],...
                                        'Callback',@(h,e)this.freeclick(h,e));
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Rectangle',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.4 0.15 0.10],...
+                                       'Position',[0.01 0.35 0.15 0.10],...
                                        'Callback',@(h,e)this.rectclick(h,e));
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Delete',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.3 0.15 0.10],...
+                                       'Position',[0.01 0.25 0.15 0.10],...
                                        'Callback',@(h,e)this.deleteclick(h,e));          
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Apply',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.2 0.15 0.10],...
+                                       'Position',[0.01 0.15 0.15 0.10],...
                                        'Callback',@(h,e)this.applyclick(h,e));
                                    
             buttons(end+1) = uicontrol('Parent',this.guifig,'String','Adjust',...
                                        'units','normalized',...
-                                       'Position',[0.01 0.1 0.15 0.10],...
+                                       'Position',[0.01 0.05 0.15 0.10],...
                                        'Callback',@(h,e)this.adjustclick(h,e));
-
+            
+            % edit field numeric for relative intensity of shapes
+            this.edt = uicontrol('Parent',this.guifig,...
+                            'units','normalized',...
+                            'String','1',...
+                            'Style','edit',...
+                            'Position',[0.1 0.865 0.06 0.08]);
+            this.edt_label = uicontrol('Parent',this.guifig,...
+                            'units','normalized',...
+                            'String','Relative Intensity',...
+                            'Style','text',...
+                            'Position',[0.01 0.85 0.08 0.10]);
+                        
             % axes    
             this.imax = axes('parent',this.guifig,'units','normalized','position',[0.18 0.07 0.4 0.87]);
             this.roiax = axes('parent',this.guifig,'units','normalized','position',[0.59 0.07 0.4 0.87]);
