@@ -1,4 +1,5 @@
 Iorig = imread('eight.tif');
+SLM_size_px = [600 600];
 
 if size(Iorig,1) ~= SLM_size_px(2) || size(Iorig,2) ~= SLM_size_px(1)
     I = imresize(Iorig,[SLM_size_px(2) SLM_size_px(1)],'bilinear');
@@ -16,8 +17,10 @@ end
 %%
 [mask, labels, n] = roiwindow.getROIData;
 
+
 %%
 maskes = mask;
+%%
 maskes = cat(3, maskes,mask);
 %%
 figure; sliceViewer(maskes, 'DisplayRangeInteraction', 'On');

@@ -48,8 +48,10 @@ axis equal;
 %%
 
 grid = 0;
-I = open("maskes.mat");
-I = I.maskes;
+% I = open("maskes.mat");
+% I = I.maskes;
+I = open("maskes_variousIntensities.mat");
+I = I.maskes_variousIntensities;
 
 
 
